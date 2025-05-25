@@ -25,6 +25,44 @@ const getUsers = async (req, res) => {
     });
   }
 };
+const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        status: 400,
+        data: {},
+        message: "User ID is required",
+      });
+    }
+
+    const user = await userService.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        data: {},
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      data: user,
+      message: "User fetched successfully",
+    });
+
+  } catch (error) {
+    console.error("getUserById error:", error);
+    return res.status(500).json({
+      status: 500,
+      data: {},
+      message: "Internal Server Error",
+    });
+  }
+};
+
 
 const changePass = async (req, res) => {
   try {
