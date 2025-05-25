@@ -81,9 +81,9 @@ const changePass = async (req, res) => {
 const handleAddFavorite = async (req, res) => {
   try {
     const userId = req.body.userId;
-    console.log(userId);
     const { type, favoriteId } = req.body;
-
+    console.log("Adding favorite:", { userId, type, favoriteId });
+    
     if (!userId || !type || !favoriteId) {
       return res.status(400).json({
         status: 400,
@@ -103,6 +103,7 @@ const handleAddFavorite = async (req, res) => {
     const result = await userService.addFavorite(userId, type, favoriteId);
     return res.status(result.status).json(result);
   } catch (error) {
+    console.error("Error adding favorite:", error);
     return res.status(500).json({
       status: 500,
       message: "Internal Server Error",

@@ -2,15 +2,19 @@ const Business = require("../model/business");
 
 const createBusiness = async (data) => {
   try {
-    let result = await Business.create({
+    // Chuẩn bị dữ liệu business
+    const businessData = {
       name: data.name,
       address: data.address,
       description: data.description,
       image: data.image,
-      services: data.services,
-      ratings: data.ratings,
-      averageRating: data.averageRating,
-    });
+      services : data.services || [],
+      ratings: data.ratings || [],
+      averageRating: data.averageRating || 0,
+    };
+
+    
+    let result = await Business.create(businessData);
 
     return {
       status: 200,
@@ -18,11 +22,12 @@ const createBusiness = async (data) => {
       data: result
     };
   } catch (error) {
-    console.log(error);
+    console.log("Error creating business:", error);
     return {
       status: 500,
       message: "Internal Server Error",
-      data: null
+      data: null,
+      error: error.message 
     };
   }
 };
@@ -31,7 +36,6 @@ const getBusiness = async (searchParams = {}) => {
   try {
     let query = {};
     
-    // Build search query
     if (searchParams.name) {
       query.name = { $regex: searchParams.name, $options: 'i' };
     }
@@ -138,7 +142,7 @@ const getByIdBusiness = async (id) => {
 
 const updateBusiness = async (id, data) => {
   try {
-    let result = await Business.find(id)
+    let result = await Business.findById(id);
     if (result) {
       if (data.name) {
         result.name = data.name;
@@ -180,6 +184,230 @@ const updateBusiness = async (id, data) => {
     return {
       status: 500,
       message: error.message,
+      data: null
+    };
+  }
+};
+
+// Hàm cập nhật chỉ services của business
+const updateBusinessServices = async (businessId, servicesData) => {
+  try {
+    const business = await Business.findById(businessId);
+    
+    if (!business) {
+      return {
+        status: 404,
+        message: "Business not found",
+        data: null
+      };
+    }
+
+    // Cập nhật services
+    business.services = servicesData;
+    
+    // Tính lại average rating cho business dựa trên services
+    if (business.services && business.services.length > 0) {
+      const totalRating = business.services.reduce((sum, service) => {
+        return sum + (service.averageRating || 0);
+      }, 0);
+      business.averageRating = totalRating / business.services.length;
+    } else {
+      business.averageRating = 0;
+    }
+
+    await business.save();
+
+    return {
+      status: 200,
+      message: "Update business services successfully",
+      data: business
+    };
+
+  } catch (error) {
+    console.log(error);
+    return {
+      status: 500,
+      message: "Internal Server Error",
+      data: null
+    };
+  }
+};
+
+// Hàm thêm service mới vào business
+const addServiceToBusiness = async (businessId, serviceData) => {
+  try {
+    const business = await Business.findById(businessId);
+    
+    if (!business) {
+      return {
+        status: 404,
+        message: "Business not found",
+        data: null
+      };
+    }
+
+    // Kiểm tra xem service đã tồn tại chưa
+    const existingService = business.services.find(
+      service => service.serviceId.toString() === serviceData.serviceId
+    );
+
+    if (existingService) {
+      return {
+        status: 400,
+        message: "Service already exists in this business",
+        data: null
+      };
+    }
+
+    // Thêm service mới
+    const newService = {
+      serviceId: serviceData.serviceId,
+      price: serviceData.price || 0,
+      ratings: serviceData.ratings || [],
+      averageRating: serviceData.averageRating || 0
+    };
+
+    business.services.push(newService);
+
+    // Tính lại average rating cho business
+    if (business.services.length > 0) {
+      const totalRating = business.services.reduce((sum, service) => {
+        return sum + (service.averageRating || 0);
+      }, 0);
+      business.averageRating = totalRating / business.services.length;
+    }
+
+    await business.save();
+
+    return {
+      status: 200,
+      message: "Add service to business successfully",
+      data: business
+    };
+
+  } catch (error) {
+    console.log(error);
+    return {
+      status: 500,
+      message: "Internal Server Error",
+      data: null
+    };
+  }
+};
+
+// Hàm cập nhật một service cụ thể trong business
+const updateServiceInBusiness = async (businessId, serviceId, updateData) => {
+  try {
+    const business = await Business.findById(businessId);
+    
+    if (!business) {
+      return {
+        status: 404,
+        message: "Business not found",
+        data: null
+      };
+    }
+
+    // Tìm service cần cập nhật
+    const serviceIndex = business.services.findIndex(
+      service => service.serviceId.toString() === serviceId
+    );
+
+    if (serviceIndex === -1) {
+      return {
+        status: 404,
+        message: "Service not found in this business",
+        data: null
+      };
+    }
+
+    // Cập nhật service
+    if (updateData.price !== undefined) {
+      business.services[serviceIndex].price = updateData.price;
+    }
+    if (updateData.averageRating !== undefined) {
+      business.services[serviceIndex].averageRating = updateData.averageRating;
+    }
+    if (updateData.ratings !== undefined) {
+      business.services[serviceIndex].ratings = updateData.ratings;
+    }
+
+    // Tính lại average rating cho business
+    if (business.services.length > 0) {
+      const totalRating = business.services.reduce((sum, service) => {
+        return sum + (service.averageRating || 0);
+      }, 0);
+      business.averageRating = totalRating / business.services.length;
+    }
+
+    await business.save();
+
+    return {
+      status: 200,
+      message: "Update service in business successfully",
+      data: business
+    };
+
+  } catch (error) {
+    console.log(error);
+    return {
+      status: 500,
+      message: "Internal Server Error",
+      data: null
+    };
+  }
+};
+
+// Hàm xóa service khỏi business
+const removeServiceFromBusiness = async (businessId, serviceId) => {
+  try {
+    const business = await Business.findById(businessId);
+    
+    if (!business) {
+      return {
+        status: 404,
+        message: "Business not found",
+        data: null
+      };
+    }
+
+    // Tìm và xóa service
+    const initialLength = business.services.length;
+    business.services = business.services.filter(
+      service => service.serviceId.toString() !== serviceId
+    );
+
+    if (business.services.length === initialLength) {
+      return {
+        status: 404,
+        message: "Service not found in this business",
+        data: null
+      };
+    }
+
+    // Tính lại average rating cho business
+    if (business.services.length > 0) {
+      const totalRating = business.services.reduce((sum, service) => {
+        return sum + (service.averageRating || 0);
+      }, 0);
+      business.averageRating = totalRating / business.services.length;
+    } else {
+      business.averageRating = 0;
+    }
+
+    await business.save();
+
+    return {
+      status: 200,
+      message: "Remove service from business successfully",
+      data: business
+    };
+
+  } catch (error) {
+    console.log(error);
+    return {
+      status: 500,
+      message: "Internal Server Error",
       data: null
     };
   }
@@ -437,6 +665,10 @@ module.exports = {
   addRating,
   getByIdBusiness,
   updateBusiness,
+  updateBusinessServices,
+  addServiceToBusiness,
+  updateServiceInBusiness,
+  removeServiceFromBusiness,
   getServicesSortedByCityAndRating,
   getServicesByCity,
 };

@@ -36,6 +36,12 @@ routerAPI.put("/business/:id", Business.updateBusiness);
 routerAPI.get("/business/:id", Business.getByIdBusiness);
 routerAPI.post("/business/rating", Business.addRating);
 
+// API Business Services Management
+routerAPI.put("/business/:id/services", Business.updateBusinessServices);
+routerAPI.post("/business/:id/services", Business.addServiceToBusiness);
+routerAPI.put("/business/:businessId/services/:serviceId", Business.updateServiceInBusiness);
+routerAPI.delete("/business/:businessId/services/:serviceId", Business.removeServiceFromBusiness);
+
 // API Services sorted by city and rating
 routerAPI.get("/services/by-city", Business.getServicesByCity);
 
