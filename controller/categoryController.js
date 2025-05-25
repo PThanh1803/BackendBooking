@@ -1,4 +1,5 @@
 const categoryService = require("../service/categoryService");
+const Category = require("../model/categogy");
 
 const createCategory = async (req, res) => {
   try {
@@ -18,17 +19,45 @@ const createCategory = async (req, res) => {
   }
 };
 
-const getAllCategory = async (req, res) => {
-  try {
-    const data = await categoryService.getCategory();
-    return res.status(data.status).json(data);
-  } catch (error) {
-    return res.status(400).json({
-      status: 400,
-      data: {},
-      message: error.message,
+const getPopularCategories  = async (req, res) => {
+  const categories = await Category.find({})
+    .populate("services")
+    .lean();
+
+  for (const category of categories) {
+    const serviceIds = category.services.map(s => s._id);
+
+    // Tính rating trung bình từng service
+    const ratings = await Business.aggregate([
+      { $unwind: "$services" },
+      { $match: { "services.serviceId": { $in: serviceIds } } },
+      {
+        $project: {
+          serviceId: "$services.serviceId",
+          avgRating: { $avg: "$services.ratings.rating" }
+        }
+      },
+      {
+        $group: {
+          _id: "$serviceId",
+          avgRating: { $avg: "$avgRating" }
+        }
+      }
+    ]);
+
+    const ratingMap = {};
+    ratings.forEach(r => {
+      ratingMap[r._id.toString()] = r.avgRating || 0;
     });
+
+    category.services = category.services.map(service => ({
+      ...service,
+      avgRating: ratingMap[service._id.toString()] || 0,
+    }))
+    .sort((a, b) => b.avgRating - a.avgRating);
   }
+
+  return categories;
 };
 
 const updateCategory = async (req, res) => {
@@ -64,7 +93,7 @@ const getByIdCategory = async (req, res) => {
 
 module.exports = {
   createCategory,
-  getAllCategory,
+  getPopularCategories,
   updateCategory,
   getByIdCategory,
 };

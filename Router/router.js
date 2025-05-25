@@ -25,7 +25,7 @@ routerAPI.put("/services/:id", serviceController.updateService);
 
 // API Category
 routerAPI.post("/categories", categoryController.createCategory);
-routerAPI.get("/categories", categoryController.getAllCategory);
+routerAPI.get("/categories", categoryController.getPopularCategories);
 routerAPI.put("/categories/:id", categoryController.updateCategory);
 routerAPI.get("/categories/:id", categoryController.getByIdCategory);
 

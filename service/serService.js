@@ -1,4 +1,5 @@
 const Service = require("../model/service");
+const Business = require("../model/business");
 
 const createSer = async (data) => {
   try {
@@ -34,16 +35,15 @@ const getService = async (searchParams) => {
     let query = {};
 
     if (searchParams.name) {
-      query.name = { $regex: searchParams.name, $options: 'i' };
+      query.name = { $regex: searchParams.name, $options: "i" };
     }
 
-    
-    let data = await Service.find(query)
+    let data = await Service.find(query);
 
     return {
       status: 200,
       message: "Get service successfully",
-      data: data
+      data: data,
     };
   } catch (error) {
     return {
@@ -54,25 +54,75 @@ const getService = async (searchParams) => {
   }
 };
 
+const getServiceByLocation = async (location) => {
+  console.log("location", location)
+  return await Business.aggregate([
+    {
+      $match: {
+        address: { $regex: location, $options: "i" },
+      },
+    },
+    { $unwind: "$services" },
+    {
+      $addFields: {
+        avgServiceRating: {
+          $cond: {
+            if: { $gt: [{ $size: "$services.ratings" }, 0] },
+            then: { $avg: "$services.ratings.rating" },
+            else: 0,
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "services",
+        localField: "services.serviceId",
+        foreignField: "_id",
+        as: "serviceInfo",
+      },
+    },
+    { $unwind: "$serviceInfo" },
+    {
+      $project: {
+        _id: 0,
+        serviceId: "$serviceInfo._id",
+        title: "$serviceInfo.title",
+        description: "$serviceInfo.description",
+        price: "$services.price",
+        avgServiceRating: 1,
+        businessName: "$name",
+        businessAddress: "$address",
+      },
+    },
+    { $sort: { avgServiceRating: -1 } },
+    { $limit: 10 },
+  ]);
+};
+
 const addRating = async (serviceId, userId, rate, comment) => {
   try {
     let data = await Service.findByIdAndUpdate(
       serviceId,
-      { $push: { ratings: { idUser: userId, rate, comment, createdAt: new Date() } } },
+      {
+        $push: {
+          ratings: { idUser: userId, rate, comment, createdAt: new Date() },
+        },
+      },
       { new: true }
     );
     if (!data) {
       return {
         status: 404,
         message: "Service not found",
-        data: null
+        data: null,
       };
     }
 
     return {
       status: 200,
       message: "Rating added successfully",
-      data: data
+      data: data,
     };
   } catch (error) {
     return {
@@ -104,4 +154,10 @@ const updateService = async (title, description, image) => {
   }
 };
 
-module.exports = { createSer, getService, updateService, addRating };
+module.exports = {
+  createSer,
+  getService,
+  updateService,
+  addRating,
+  getServiceByLocation,
+};

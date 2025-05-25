@@ -39,7 +39,7 @@ const getIndivid = async (searchParams = {}) => {
     }
 
 
-    let data = await Individuals.find(query)
+    let data = await Individuals.find(query).populate("businessId")
       .sort({ 
         averageRating: -1,  // Ưu tiên 1: Sắp xếp theo rating cao đến thấp
         'ratings.createdAt': -1,  // Ưu tiên 2: Đánh giá mới nhất
