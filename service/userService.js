@@ -1,4 +1,5 @@
 require("dotenv").config();
+const User = require("../model/users");
 
 const Users = require("../model/users");
 const bcrypt = require("bcryptjs");
@@ -110,9 +111,6 @@ const registerService = async (userData) => {
 
 const getUserById = async (userId) => {
   return await User.findById(userId)
-    .populate("favorite.business")
-    .populate("favorite.individual")
-    .lean(); // nếu bạn chỉ cần object đơn giản
 };
 
 const getAllUser = async () => {

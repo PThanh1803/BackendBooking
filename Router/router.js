@@ -13,7 +13,7 @@ routerAPI.post("/login", usersAPI.handleLogin);
 routerAPI.post("/register", usersAPI.handleRegister);
 
 // API Users
-routerAPI.get("/users", verifyToken, usersAPI.getUsers);
+routerAPI.get("/user", verifyToken, usersAPI.getUserById);
 routerAPI.put("/update", verifyToken, usersAPI.changePass);
 routerAPI.post("/add-favorite", verifyToken, usersAPI.handleAddFavorite);
 routerAPI.post("/delete-favorite", verifyToken, usersAPI.handleDeleteFavorite);

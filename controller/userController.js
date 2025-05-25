@@ -27,7 +27,7 @@ const getUsers = async (req, res) => {
 };
 const getUserById = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(400).json({
@@ -147,5 +147,6 @@ module.exports = {
   getUsers,
   changePass,
   handleAddFavorite,
-  handleDeleteFavorite
+  handleDeleteFavorite,
+  getUserById
 };

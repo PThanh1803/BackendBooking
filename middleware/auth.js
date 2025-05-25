@@ -16,16 +16,23 @@ const errorHandler = (err, req, res, next) => {
 };
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.token ;
+  const token = req.headers.token;
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
+    req.userId = decoded.userId;
+
+    // ✅ Gán an toàn nếu req.body không tồn tại
+    req.body = req.body || {};
     req.body.userId = decoded.userId;
-    console.log(req.body.userId);
+
+    console.log("idUser: ", req.userId);
     next();
   });
 };
