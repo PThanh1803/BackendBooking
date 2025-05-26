@@ -5,6 +5,7 @@ const categoryController = require("../controller/categoryController");
 const Individual = require("../controller/Individual");
 const Business = require("../controller/Business");
 const RatingController = require("../controller/Rating");
+const Location = require("../controller/locaController");
 const { verifyToken } = require("../middleware/auth");
 const routerAPI = express.Router();
 
@@ -39,8 +40,14 @@ routerAPI.post("/business/rating", Business.addRating);
 // API Business Services Management
 routerAPI.put("/business/:id/services", Business.updateBusinessServices);
 routerAPI.post("/business/:id/services", Business.addServiceToBusiness);
-routerAPI.put("/business/:businessId/services/:serviceId", Business.updateServiceInBusiness);
-routerAPI.delete("/business/:businessId/services/:serviceId", Business.removeServiceFromBusiness);
+routerAPI.put(
+  "/business/:businessId/services/:serviceId",
+  Business.updateServiceInBusiness
+);
+routerAPI.delete(
+  "/business/:businessId/services/:serviceId",
+  Business.removeServiceFromBusiness
+);
 
 // API Services sorted by city and rating
 routerAPI.get("/services/by-city", Business.getServicesByCity);
@@ -52,5 +59,9 @@ routerAPI.put("/individuals/:id", Individual.updateIndividuals);
 routerAPI.get("/individuals/:id", Individual.getByIdIndividuals);
 routerAPI.post("/individuals/rating", Individual.addRating);
 
+// API location
+routerAPI.get("/locations", Location.getLocation);
+
+// routerAPI.get("search");
 
 module.exports = routerAPI;
