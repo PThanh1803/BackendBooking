@@ -29,6 +29,8 @@ routerAPI.get("/categories", categoryController.getPopularCategories);
 routerAPI.put("/categories/:id", categoryController.updateCategory);
 routerAPI.get("/categories/:id", categoryController.getByIdCategory);
 
+routerAPI.get("/search", Business.handleSearch);
+
 // API Business
 routerAPI.post("/business", Business.createBusiness);
 routerAPI.get("/business", Business.getAllBusiness);
